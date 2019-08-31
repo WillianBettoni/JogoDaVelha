@@ -1,0 +1,532 @@
+#include <windows.h>
+#include <string.h>
+#include <stdio.h>
+#include <wingdi.h>
+#include <stdlib.h>
+
+
+#define BUTTON_1 1
+#define BUTTON_2 2
+#define BUTTON_3 3
+#define BUTTON_4 4
+#define BUTTON_5 5
+#define BUTTON_6 6
+#define BUTTON_7 7
+#define BUTTON_8 8
+#define BUTTON_9 9
+#define BUTTON_PLAY_AGAIN 10
+#define BUTTON_RESET 11
+#define BUTTON_RESULT_PLAYER_1 12
+#define BUTTON_RESULT_PLAYER_2 13
+#define BUTTON_TURNO 14
+
+HWND hButton1;
+HWND hButton2;
+HWND hButton3;
+HWND hButton4;
+HWND hButton5;
+HWND hButton6;
+HWND hButton7;
+HWND hButton8;
+HWND hButton9;
+HWND hButtonTurno;
+HWND hButtonResultPlayer1;
+HWND hButtonResultPlayer2;
+HWND hButtonReset;
+HWND hButtonPlayAgain;
+
+char button1[2];
+char button2[2];
+char button3[2];
+char button4[2];
+char button5[2];
+char button6[2];
+char button7[2];
+char button8[2];
+char button9[2];
+
+int player = 1;
+int totalPlayer1 = 0;
+int totalPlayer2 = 0;
+char jogadorAtual[10];
+
+//Esboço de funções
+LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
+void addElements(HWND hwnd);
+void VerificaGanhador(char jogadorAtual[10]);
+void validarBotao(HWND button, char buttonChar[5]);
+void validarPlacar();
+void limparCampos();
+
+//Windowns API
+int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR args, int nCmdShow){
+	WNDCLASSW wc = {};							//Declaração e Criação da Instância
+	
+	wc.lpszClassName = L"My Window Class";		//Nome da Windowns Class
+	wc.hbrBackground = (HBRUSH)COLOR_WINDOW;	//Cor de fundo da janela
+	wc.lpfnWndProc = WindowProcedure;			//Window Procedure
+	wc.hInstance = hInst; 						//Instância da aplicação
+	
+	RegisterClassW(&wc);
+	
+	CreateWindowW(								
+		L"My Window Class",						//Nome da Window Class
+		L"JOGO DA VELHA",						//Nome da janela
+		WS_OVERLAPPEDWINDOW | WS_VISIBLE,		
+		0, 0, 800, 600,							//Posição e Tamanho
+		NULL, NULL, NULL, NULL		
+	);
+	
+	MSG msg = {};
+	
+	while(GetMessage(&msg, NULL, NULL, NULL)){	//Loop para recuperar mensagem e armazenar em uma estrutura MSG
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	}
+	return 0;
+}
+
+//Window Procedure
+LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp){		
+	switch(msg){
+		case WM_CREATE:                                                                                                                                                                                                                                                                          
+			addElements(hwnd);
+			break;		
+		case WM_COMMAND:
+			switch(wp){	
+				case BUTTON_1:								
+					validarBotao(hButton1, button1);
+					break;	
+				case BUTTON_2:				
+					validarBotao(hButton2, button2);
+					break;
+				case BUTTON_3:									
+					validarBotao(hButton3, button3);
+					break;
+				case BUTTON_4:										
+					validarBotao(hButton4, button4);
+					break;
+				case BUTTON_5:					
+					validarBotao(hButton5, button5);
+					break;
+				case BUTTON_6:					
+					validarBotao(hButton6, button6);
+					break;	
+				case BUTTON_7:					
+					validarBotao(hButton7, button7);
+					break;	
+				case BUTTON_8:					
+					validarBotao(hButton8, button8);
+					break;	
+				case BUTTON_9:					
+					validarBotao(hButton9, button9);
+					break;
+				case BUTTON_RESET:
+					totalPlayer1 = 0;
+					totalPlayer2 = 0;
+					player = 1;
+					SetWindowText(hButtonResultPlayer1, "0");
+					SetWindowText(hButtonResultPlayer2, "0");
+					limparCampos();
+					break;
+				case BUTTON_PLAY_AGAIN:
+					player = 1;
+					limparCampos();
+					break;	
+			}
+			break;				
+		case WM_DESTROY: 
+			PostQuitMessage(0);
+			return 0;
+	}		
+	return DefWindowProcW(hwnd, msg, wp, lp);
+}
+
+//Adiciona os elementos na Window Class
+void addElements(HWND hwnd){
+	//Titúlo
+	CreateWindow(
+		"Static",
+		"Jogo da Velha",
+		WS_VISIBLE | WS_CHILD | SS_CENTER,
+		100, 20, 600, 20,
+		hwnd,
+		NULL, NULL, NULL
+	);
+	
+	//Quadro de Botões
+	hButton1 = CreateWindow(
+		"Button",
+		"",
+		WS_VISIBLE | WS_CHILD | WS_BORDER,
+		20, 80, 120, 120,
+		hwnd,
+		(HMENU)BUTTON_1, NULL, NULL
+	);
+	
+	hButton2 = CreateWindow(
+		"Button",
+		"",
+		WS_VISIBLE | WS_CHILD | WS_BORDER,
+		160, 80, 120, 120,
+		hwnd,
+		(HMENU)BUTTON_2, NULL, NULL
+	);
+	
+	hButton3 = CreateWindow(
+		"Button",
+		"",
+		WS_VISIBLE | WS_CHILD | WS_BORDER,
+		300, 80, 120, 120,
+		hwnd,
+		(HMENU)BUTTON_3, NULL, NULL
+	);
+	
+	hButton4 = CreateWindow(
+		"Button",
+		"",
+		WS_VISIBLE | WS_CHILD | WS_BORDER,
+		20, 220, 120, 120,
+		hwnd,
+		(HMENU)BUTTON_4, NULL, NULL
+	);
+	
+	hButton5 = CreateWindow(
+		"Button",
+		"",
+		WS_VISIBLE | WS_CHILD | WS_BORDER,
+		160, 220, 120, 120,
+		hwnd,
+		(HMENU)BUTTON_5, NULL, NULL
+	);
+	
+	hButton6 = CreateWindow(
+		"Button",
+		"",
+		WS_VISIBLE | WS_CHILD | WS_BORDER,
+		300, 220, 120, 120,
+		hwnd,
+		(HMENU)BUTTON_6, NULL, NULL
+	);
+	
+	hButton7 = CreateWindow(
+		"Button",
+		"",
+		WS_VISIBLE | WS_CHILD | WS_BORDER,
+		20, 360, 120, 120,
+		hwnd,
+		(HMENU)BUTTON_7, NULL, NULL
+	);
+	
+	hButton8 = CreateWindow(
+		"Button",
+		"",
+		WS_VISIBLE | WS_CHILD | WS_BORDER,
+		160, 360, 120, 120,
+		hwnd,
+		(HMENU)BUTTON_8, NULL, NULL
+	);
+	
+	hButton9 = CreateWindow(
+		"Button",
+		"",
+		WS_VISIBLE | WS_CHILD | WS_BORDER,
+		300, 360, 120, 120,
+		hwnd,
+		(HMENU)BUTTON_9, NULL, NULL
+	);
+	
+	//Jogador Atual
+	CreateWindow(
+		"Static",
+		"Jogador Atual",
+		WS_VISIBLE | WS_CHILD | SS_CENTER,
+		570, 90, 100, 20,
+		hwnd,
+		NULL, NULL, NULL
+	);
+	
+	hButtonTurno = CreateWindow(
+		"Button",
+		"Player 1 ",
+		WS_VISIBLE | WS_CHILD | WS_BORDER,
+		540, 110, 160, 60,
+		hwnd,
+		(HMENU)BUTTON_TURNO, NULL, NULL
+	);
+	
+	//Placar
+	CreateWindow(
+		"Static",
+		"Player 1 - X",
+		WS_VISIBLE | WS_CHILD | SS_CENTER,
+		530, 220, 80, 30,
+		hwnd,
+		NULL, NULL, NULL
+	);
+	
+	CreateWindow(
+		"Static",
+		"Player 2 - O",
+		WS_VISIBLE | WS_CHILD | SS_CENTER,
+		630, 220, 80, 30,
+		hwnd,
+		NULL, NULL, NULL
+	);
+	
+	hButtonResultPlayer1 = CreateWindow(
+		"Button",
+		"0",
+		WS_VISIBLE | WS_CHILD | WS_BORDER,
+		530, 240, 80, 80,
+		hwnd,
+		(HMENU)BUTTON_RESULT_PLAYER_1, NULL, NULL
+	);
+	
+	hButtonResultPlayer2 = CreateWindow(
+		"Button",
+		"0",
+		WS_VISIBLE | WS_CHILD | WS_BORDER,
+		630, 240, 80, 80,
+		hwnd,
+		(HMENU)BUTTON_RESULT_PLAYER_2, NULL, NULL
+	);
+	
+	//Botões Reset Game e Play Again
+	hButtonReset = CreateWindow(
+		"Button",
+		"Reset Game",
+		WS_VISIBLE | WS_CHILD | WS_BORDER,
+		550, 375, 140, 40,
+		hwnd,
+		(HMENU)BUTTON_RESET, NULL, NULL
+	);
+	
+	hButtonPlayAgain = CreateWindow(
+		"Button",
+		"Play Again",
+		WS_VISIBLE | WS_CHILD | WS_BORDER,
+		550, 425, 140, 40,
+		hwnd,
+		(HMENU)BUTTON_PLAY_AGAIN, NULL, NULL
+	);	
+}
+
+//Valida botão e identifica player
+void validarBotao(HWND button, char buttonChar[2]){
+	if(strcmp(buttonChar, "")==0){
+		player = (player % 2) ? 1 : 2;							
+		if(player == 1){
+			strcpy(jogadorAtual, "Player 1");
+			SetWindowText(hButtonTurno, "Player 2");
+			SetWindowText(button, "X");
+			buttonChar[0] = 'X';							
+		} else {
+			strcpy(jogadorAtual, "Player 2");
+			SetWindowText(hButtonTurno, "Player 1");
+			SetWindowText(button, "O");
+			buttonChar[0] = 'O';
+		} 	
+		VerificaGanhador(jogadorAtual);					
+		player++;	
+	}	
+}
+
+//Valida placar
+void validarPlacar(){
+	char aux[10];
+	if(player==1){
+		totalPlayer1++;
+		itoa (totalPlayer1,aux,10);
+		SetWindowText(hButtonResultPlayer1, aux);	
+	}else{
+		totalPlayer2++;	
+		itoa (totalPlayer2,aux,10);
+		SetWindowText(hButtonResultPlayer2, aux);
+	}
+}
+
+//Limpa campos
+void limparCampos(){
+	SetWindowText(hButton1, "");
+	SetWindowText(hButton2, "");
+	SetWindowText(hButton3, "");
+	SetWindowText(hButton4, "");
+	SetWindowText(hButton5, "");
+	SetWindowText(hButton6, "");
+	SetWindowText(hButton7, "");
+	SetWindowText(hButton8, "");
+	SetWindowText(hButton9, "");
+	SetWindowText(hButtonTurno, "Player 1");
+	strcpy(button1, "");
+	strcpy(button2, "");
+	strcpy(button3, "");
+	strcpy(button4, "");
+	strcpy(button5, "");
+	strcpy(button6, "");
+	strcpy(button7, "");
+	strcpy(button8, "");
+	strcpy(button9, "");
+	EnableWindow(hButton1, TRUE);
+	EnableWindow(hButton2, TRUE);
+	EnableWindow(hButton3, TRUE);
+	EnableWindow(hButton4, TRUE);
+	EnableWindow(hButton5, TRUE);
+	EnableWindow(hButton6, TRUE);
+	EnableWindow(hButton7, TRUE);
+	EnableWindow(hButton8, TRUE);
+	EnableWindow(hButton9, TRUE);
+	EnableWindow(hButtonPlayAgain, TRUE);
+	EnableWindow(hButtonReset, TRUE);
+}
+
+//Verifica ganhador através de cada possibilidade
+void VerificaGanhador(char jogadorAtual[10]){
+					
+	int ganhador = 0;
+	
+	
+	if((strcmp(button1, button2) == 0) && (strcmp(button2,button3)==0) && (strcmp(button1, "") != 0)){
+		//desabilitar os botões após o resultado	
+		EnableWindow(hButton4, FALSE);
+		EnableWindow(hButton5, FALSE);
+		EnableWindow(hButton6, FALSE);
+		EnableWindow(hButton7, FALSE);
+		EnableWindow(hButton8, FALSE);
+		EnableWindow(hButton9, FALSE);
+		SetWindowText(hButton1, "WINNER");
+		SetWindowText(hButton2, "WINNER");
+		SetWindowText(hButton3, "WINNER");
+		validarPlacar();
+		ganhador++;		
+	}
+	
+	if((strcmp(button4, button5) == 0) && (strcmp(button5,button6)==0) && (strcmp(button4, "") != 0)){
+		//desabilitar os botões após o resultado	
+		EnableWindow(hButton1, FALSE);
+		EnableWindow(hButton2, FALSE);
+		EnableWindow(hButton3, FALSE);
+		EnableWindow(hButton7, FALSE);
+		EnableWindow(hButton8, FALSE);
+		EnableWindow(hButton9, FALSE);
+		SetWindowText(hButton4, "WINNER");
+		SetWindowText(hButton5, "WINNER");
+		SetWindowText(hButton6, "WINNER");
+		validarPlacar();
+		ganhador++;		
+	}
+	
+	if((strcmp(button7, button8) == 0) && (strcmp(button8,button9)==0) && (strcmp(button7, "") != 0)){
+		//desabilitar os botões após o resultado	
+		EnableWindow(hButton1, FALSE);
+		EnableWindow(hButton2, FALSE);
+		EnableWindow(hButton3, FALSE);
+		EnableWindow(hButton4, FALSE);
+		EnableWindow(hButton5, FALSE);
+		EnableWindow(hButton6, FALSE);
+		SetWindowText(hButton7, "WINNER");
+		SetWindowText(hButton8, "WINNER");
+		SetWindowText(hButton9, "WINNER");	
+		validarPlacar();	
+		ganhador++;		
+	}
+	
+	if((strcmp(button1, button4) == 0) && (strcmp(button4,button7)==0) && (strcmp(button1, "") != 0)){
+		EnableWindow(hButton2, FALSE);
+		EnableWindow(hButton3, FALSE);
+		EnableWindow(hButton5, FALSE);
+		EnableWindow(hButton6, FALSE);
+		EnableWindow(hButton8, FALSE);
+		EnableWindow(hButton9, FALSE);
+		SetWindowText(hButton1, "WINNER");
+		SetWindowText(hButton4, "WINNER");
+		SetWindowText(hButton7, "WINNER");
+		validarPlacar();
+		ganhador++;		
+	}
+	
+	if((strcmp(button2, button5) == 0) && (strcmp(button5,button8)==0) && (strcmp(button2, "") != 0)){
+		EnableWindow(hButton1, FALSE);
+		EnableWindow(hButton3, FALSE);
+		EnableWindow(hButton4, FALSE);
+		EnableWindow(hButton6, FALSE);
+		EnableWindow(hButton7, FALSE);
+		EnableWindow(hButton9, FALSE);
+		SetWindowText(hButton2, "WINNER");
+		SetWindowText(hButton5, "WINNER");
+		SetWindowText(hButton8, "WINNER");
+		validarPlacar();
+		ganhador++;		
+	}
+	
+	if((strcmp(button3, button6) == 0) && (strcmp(button6,button9)==0) && (strcmp(button3, "") != 0)){
+		EnableWindow(hButton1, FALSE);
+		EnableWindow(hButton2, FALSE);
+		EnableWindow(hButton4, FALSE);
+		EnableWindow(hButton5, FALSE);
+		EnableWindow(hButton7, FALSE);
+		EnableWindow(hButton8, FALSE);
+		SetWindowText(hButton3, "WINNER");
+		SetWindowText(hButton6, "WINNER");
+		SetWindowText(hButton9, "WINNER");
+		validarPlacar();
+		ganhador++;		
+	}
+	
+	if((strcmp(button1, button5) == 0) && (strcmp(button5,button9)==0) && (strcmp(button1, "") != 0)){
+		EnableWindow(hButton2, FALSE);
+		EnableWindow(hButton3, FALSE);
+		EnableWindow(hButton4, FALSE);
+		EnableWindow(hButton6, FALSE);
+		EnableWindow(hButton7, FALSE);
+		EnableWindow(hButton8, FALSE);
+		SetWindowText(hButton1, "WINNER");
+		SetWindowText(hButton5, "WINNER");
+		SetWindowText(hButton9, "WINNER");
+		validarPlacar();
+		ganhador++;		
+	}
+	
+	if((strcmp(button3, button5) == 0) && (strcmp(button5,button7)==0) && (strcmp(button3, "") != 0)){
+		EnableWindow(hButton1, FALSE);
+		EnableWindow(hButton2, FALSE);
+		EnableWindow(hButton4, FALSE);
+		EnableWindow(hButton6, FALSE);
+		EnableWindow(hButton8, FALSE);
+		EnableWindow(hButton9, FALSE);
+		SetWindowText(hButton3, "WINNER");
+		SetWindowText(hButton5, "WINNER");
+		SetWindowText(hButton7, "WINNER");
+		validarPlacar();
+		ganhador++;		
+	}
+	
+	if(ganhador>0){
+		
+		EnableWindow(hButtonPlayAgain, FALSE);
+		EnableWindow(hButtonReset, FALSE);
+		
+		int msgboxID = MessageBox(
+	        NULL,
+	        strcat(jogadorAtual, " ganhador da rodada, deseja continuar jogando?"),
+	        "Ganhador",
+	        MB_YESNO | MB_DEFBUTTON1
+    	);
+    	
+    	if(msgboxID == IDYES){
+    		player=0;
+    		limparCampos();		
+		} else {
+			if(totalPlayer1>totalPlayer2){
+				MessageBox(NULL, "FIM DE JOGO. PLAYER 1 VENCEDOR DO GAME.", "VENCEDOR", MB_OK);				
+			} else {
+				if(totalPlayer2>totalPlayer1){
+					MessageBox(NULL, "FIM DE JOGO. PLAYER 2 VENCEDOR DO GAME.", "VENCEDOR", MB_OK);
+				} else {
+					MessageBox(NULL, "FIM DE JOGO. JOGO EMPATADO.", "EMPATE", MB_OK);
+				}						
+			}	
+			PostQuitMessage(0);
+		}
+	}	
+}
